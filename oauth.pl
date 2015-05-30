@@ -7,10 +7,15 @@
 :- use_module(library(http/http_session)).
 :- use_module(library(http/js_write)).
 :- use_module(library(http/http_files)).
+:- use_module(library(http/json)).
+:- use_module(library(http/http_open)).
+:- use_module(library(http/http_json)).
 
 http:location(files, '/f', []).
 
 :- http_handler('/', home_page, []).
+:- http_handler('/gconnect', gconnect, []).
+
 :- http_handler(files(.), http_reply_from_files('test_files', []), [prefix]).
 
 server(Port) :-
@@ -41,6 +46,11 @@ home_page(Request) :-
 	    p('~w, we are glad your spirit is present with us'-[Nick]),
 	    \google_loginButton
 	    ]).
+
+gconnect(Request):-
+	%http_read_json_dict(Request,DictIn),
+	DictIn = _A{type:test, msg:hello},
+	reply_json(DictIn).
 
 call_back_script -->
 	js_script({|javascript||
