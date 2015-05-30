@@ -10,6 +10,8 @@
 :- use_module(library(http/json)).
 :- use_module(library(http/http_open)).
 :- use_module(library(http/http_json)).
+:- use_module(library(http/http_parameters)).
+:- use_module(library(http/http_client)).
 
 http:location(files, '/f', []).
 
@@ -22,13 +24,40 @@ server(Port) :-
         http_server(http_dispatch, [port(Port)]),
 	format("Server should be on port 5000 to work with google settings- is it?").
 
-/* The implementation of /. The single argument provides the request
-details, which we ignore for now. Our task is to write a CGI-Document:
-a number of name: value -pair lines, followed by two newlines, followed
-by the document content, The only obligatory header line is the
-:- use_module(library(http/http_session)).Content-type: <mime-type> header.
-Printing is done with reply_html_page, which handles the headers and
-the head and body tags, the doctype, etc. */
+read_client_secrets(MyWeb,Client_Id,Client_Secret) :-
+	open('client_secrets.json',read,Stream),
+	json_read_dict(Stream,Dict),
+	_{web:MyWeb} :< Dict,
+	_{
+	    auth_provider_x509_cert_url:Auth_url,
+	    auth_uri:Auth_uri,
+	    client_email:Client_email,
+	    client_id:Client_Id,
+	    client_secret:Client_Secret,
+	    client_x509_cert_url:Client_cert_url,
+	    javascript_origins:Javascript_origins,
+	    redirect_uris: Redirect_uris,
+	    token_uri:Token_Uri
+	} :<MyWeb,
+	close(Stream).
+
+post_to_google(Reply,Code,Client_Id,Client_Secret):-
+	    Grant_type=authorization_code,
+	    http_post(
+             'http://postcatcher.in/catchers/5569b2144bc773030000825a',
+		form([
+		  code=Code,
+		  redirect_uri='http://localhost:5000',
+		  client_id=Client_Id,
+	          %scope=Scope,
+		  client_secret=Client_Secret,
+		  grant_type=Grant_type
+	      ]),
+              Reply,
+             []
+          ).
+   %term_to_atom(Term,Reply).
+
 
 home_page(Request) :-
 	nick_name(Nick),
@@ -48,9 +77,13 @@ home_page(Request) :-
 	    ]).
 
 gconnect(Request):-
-	%http_read_json_dict(Request,DictIn),
-	DictIn = _A{type:test, msg:hello},
-	reply_json(DictIn).
+	%I need to get the code from the request
+	http_parameters(Request,[code(Code,[default(default)])]),
+	DictOut = _A{access_token:test, token_type:hello, code:Code},
+	read_client_secrets(_MyWeb,Client_Id,Client_Secret),
+	post_to_google(Reply,Code,Client_Id,Client_Secret),
+	reply_json(DictOut).
+
 
 call_back_script -->
 	js_script({|javascript||
@@ -61,17 +94,26 @@ call_back_script -->
                          console.log("has code");
                          console.log(authResult['code']);
 			 $('#signInButton').attr('style','display: none');
+
+			 $.post("/gconnect",
+			   {code:authResult['code']},
+			   function(data,status){
+			    console.log("Data: " + data.access_token + "\nToken type" + data.token_type + "\nStatus: " + status);
+			   });
+			 /*
 			 $.ajax({
 			       type: 'POST',
 			       url: '/gconnect',
 			       processData:false,
+			       //contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
 			       contentType: 'application/octet-stream; charset=utf-8',
-			       data: authResult['code'],
+			       data: {code:authResult['code']},
 			       success: function(result){
 					    console.log("succes");
 					    console.log(result);
 					}
 			   });
+                          */
 
 			}
 		      }
