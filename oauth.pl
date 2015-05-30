@@ -33,22 +33,26 @@ home_page(Request) :-
 	   script([type='text/javascript',
 		    src='//apis.google.com/js/platform.js?onload=start'],[]),
 	   script([type='text/javascript',
-		    src='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js'],[])
+		    src='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js'],[]),
+	    \call_back_script
 	   ],
 	    [h1('hello'),
 	    p('~w, we are glad your spirit is present with us'-[Nick]),
-	    \google_loginButton,
-	    \call_back_script]).
+	    \google_loginButton
+	    ]).
 
 call_back_script -->
 	js_script({|javascript||
-		      function signInCallback(authResult){
-			 alert("here");
-		         if(authResult['code']{
-				alert(code);
-			 }
+		      console.log("script runs");
+		      function signInCallback(authResult) {
+                        console.log("got to call back");
+                        if (authResult['code']) {
+                         console.log("has code");
+                         console.log(authResult['code']);
+			}
 		      }
-		   |}).
+
+		      |}).
 
 
 google_loginButton -->
