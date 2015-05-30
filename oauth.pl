@@ -61,6 +61,18 @@ call_back_script -->
                          console.log("has code");
                          console.log(authResult['code']);
 			 $('#signInButton').attr('style','display: none');
+			 $.ajax({
+			       type: 'POST',
+			       url: '/gconnect',
+			       processData:false,
+			       contentType: 'application/octet-stream; charset=utf-8',
+			       data: authResult['code'],
+			       success: function(result){
+					    console.log("succes");
+					    console.log(result);
+					}
+			   });
+
 			}
 		      }
 
