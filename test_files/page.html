@@ -23,7 +23,7 @@
           <div id="signInButton">
           <span class="g-signin"
             data-scope="openid email"
-            data-clientid="13140951618-15nik769cellkubaqnjk5facdib2dh4d.apps.googleusercontent.com"
+            data-clientid="124024716168-p5lvtlj5jinp9u912s3f7v3a5cuvj2g8.apps.googleusercontent.com"
             data-redirecturi="postmessage"
             data-accesstype="offline"
             data-cookiepolicy="single_host_origin"
@@ -36,7 +36,13 @@
 
 <script>
 function signInCallback(authResult) {
+  alert("got to call back");
   if (authResult['code']) {
+    alert("has code");
+    alert(authResult['code']);
+  }
+}
+/*
     // Hide the sign-in button now that the user is authorized
     $('#signinButton').attr('style', 'display: none');
     // Send the one-time-use code to the server, if the server responds, write a 'login successful' message to the web page and then redirect back to the main restaurants page
@@ -62,6 +68,7 @@ function signInCallback(authResult) {
       }
       
   }); } }
+*/
 </script>
 
 
