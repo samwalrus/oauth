@@ -14,7 +14,8 @@ http:location(files, '/f', []).
 :- http_handler(files(.), http_reply_from_files('test_files', []), [prefix]).
 
 server(Port) :-
-        http_server(http_dispatch, [port(Port)]).
+        http_server(http_dispatch, [port(Port)]),
+	format("Server should be on port 5000 to work with google settings- is it?").
 
 /* The implementation of /. The single argument provides the request
 details, which we ignore for now. Our task is to write a CGI-Document:
@@ -49,6 +50,7 @@ call_back_script -->
                         if (authResult['code']) {
                          console.log("has code");
                          console.log(authResult['code']);
+			 $('#signInButton').attr('style','display: none');
 			}
 		      }
 
