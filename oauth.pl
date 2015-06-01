@@ -45,8 +45,8 @@ read_client_secrets(MyWeb,Client_Id,Client_Secret) :-
 post_to_google(Reply,Code,Client_Id,Client_Secret):-
 	    Grant_type=authorization_code,
 	    http_post(
-             'http://requestb.in/1cl6wx61',
-	     %'https://www.googleapis.com/oauth2/v3/token',
+             %'http://requestb.in/10qo0si1',
+	     'https://www.googleapis.com/oauth2/v3/token',
 		form([
 		  code=Code,
 		  client_id=Client_Id,
@@ -55,9 +55,49 @@ post_to_google(Reply,Code,Client_Id,Client_Secret):-
 		  grant_type=Grant_type
 	      ]),
               Reply,
-             []
+             [cert_verify_hook(cert_verify)]
           ).
    %term_to_atom(Term,Reply).
+
+post_to_google2(JSon,Code,CID,CS):-
+	Base ='https://www.googleapis.com/oauth2/v3/token',
+	ListofData=[
+		       code=Code,
+		       client_id=CID,
+		       client_secret=CS,
+		       redirect_uri='http://localhost:5000/',
+		       grant_type=authorization_code
+
+			  ],
+	http_open(Base, In,
+                  [ cert_verify_hook(cert_accept_any),
+		    method(post),post(form(ListofData))
+                  ]),
+	json_read(In,JSon),
+	close(In).
+
+
+post_to_google3(Profile,Code,CID,CS):-
+	Base ='https://www.googleapis.com/oauth2/v3/token',
+	ListofData=[
+		       code=Code,
+		       client_id=CID,
+		       client_secret=CS,
+		       redirect_uri='http://localhost:5000/',
+		       grant_type=authorization_code
+
+			  ],
+        http_open(Base, In,
+                  [ cert_verify_hook(cert_verify),
+		    method(post),post(form(ListofData))
+                  ]),
+	call_cleanup(json_read_dict(In, Profile),
+		     close(In)).
+
+
+cert_verify(_SSL, _ProblemCert, _AllCerts, _FirstCert, _Error) :-
+        debug(ssl(cert_verify),'~s', ['Accepting certificate']).
+
 
 
 home_page(Request) :-
@@ -82,7 +122,8 @@ gconnect(Request):-
 	http_parameters(Request,[code(Code,[default(default)])]),
 	DictOut = _A{access_token:test, token_type:hello, code:Code},
 	read_client_secrets(_MyWeb,Client_Id,Client_Secret),
-	post_to_google(Reply,Code,Client_Id,Client_Secret),
+	trace,
+	post_to_google3(Reply,Code,Client_Id,Client_Secret),
 	reply_json(_{reply:Reply}).
 
 
@@ -99,8 +140,8 @@ call_back_script -->
 			 $.post("/gconnect",
 			   {code:authResult['code']},
 			   function(data,status){
-			    console.log("Data: " + data.reply + "\nStatus: " + status);
-			    //console.log("Access Token: " + data.access_token + "\nExpires in : " + data.expires_in + "\nToken_type : " + data.token_type +  "\nStatus: " + status);
+			    //console.log("Data: " + data.reply + "\nStatus: " + status);
+			    console.log("Access Token: " + data.access_token + "\nExpires in : " + data.expires_in + "\nToken_type : " + data.token_type +  "\nStatus: " + status);
 			   });
 			 /*
 			 $.ajax({
