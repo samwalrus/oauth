@@ -12,6 +12,7 @@
 :- use_module(library(http/http_json)).
 :- use_module(library(http/http_parameters)).
 :- use_module(library(http/http_client)).
+:- use_module(library(http/http_ssl_plugin)).
 
 http:location(files, '/f', []).
 
@@ -44,13 +45,13 @@ read_client_secrets(MyWeb,Client_Id,Client_Secret) :-
 post_to_google(Reply,Code,Client_Id,Client_Secret):-
 	    Grant_type=authorization_code,
 	    http_post(
-             'http://postcatcher.in/catchers/5569b2144bc773030000825a',
+             'http://requestb.in/1cl6wx61',
+	     %'https://www.googleapis.com/oauth2/v3/token',
 		form([
 		  code=Code,
-		  redirect_uri='http://localhost:5000',
 		  client_id=Client_Id,
-	          %scope=Scope,
-		  client_secret=Client_Secret,
+                  client_secret=Client_Secret,
+		  redirect_uri='http://localhost:5000/',
 		  grant_type=Grant_type
 	      ]),
               Reply,
@@ -82,7 +83,7 @@ gconnect(Request):-
 	DictOut = _A{access_token:test, token_type:hello, code:Code},
 	read_client_secrets(_MyWeb,Client_Id,Client_Secret),
 	post_to_google(Reply,Code,Client_Id,Client_Secret),
-	reply_json(DictOut).
+	reply_json(_{reply:Reply}).
 
 
 call_back_script -->
@@ -98,7 +99,8 @@ call_back_script -->
 			 $.post("/gconnect",
 			   {code:authResult['code']},
 			   function(data,status){
-			    console.log("Data: " + data.access_token + "\nToken type" + data.token_type + "\nStatus: " + status);
+			    console.log("Data: " + data.reply + "\nStatus: " + status);
+			    //console.log("Access Token: " + data.access_token + "\nExpires in : " + data.expires_in + "\nToken_type : " + data.token_type +  "\nStatus: " + status);
 			   });
 			 /*
 			 $.ajax({
